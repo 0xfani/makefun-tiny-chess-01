@@ -22,9 +22,19 @@ The engine:
   internal move generator is only pseudo-legal;
 - searches with iterative-deepening negamax, alpha-beta pruning, and a
   capture/promotion quiescence search with delta pruning at the leaves;
-- evaluates material plus simple piece-square tables, with a very high king
-  value so a pseudo-legal line that exposes the king to capture is refuted by
-  the search itself, without a separate check-detection pass;
+- caches negamax results in a lightweight transposition table keyed on a
+  deterministic (fixed-seed) Zobrist-style position hash, reused across the
+  iterative-deepening passes of a single move decision;
+- extends the search by one real ply instead of dropping to quiescence when
+  a move delivers check, to avoid horizon-effect blunders right past a
+  forcing sequence;
+- evaluates material plus simple piece-square tables, a king pawn-shield
+  bonus and open-file penalty (king safety), scaled down as material thins
+  towards the endgame (a separate mobility term was tried and dropped: its
+  per-node eval cost pushed worst-case move time too close to the cap);
+- has a very high king value so a pseudo-legal line that exposes the king
+  to capture is refuted by the search itself, without a separate
+  check-detection pass in the hot move-generation loop;
 - is bounded purely by a fixed node-count budget per move (never the wall
   clock), so it is fully deterministic: the same position and history always
   produce the same move, which the rules require.
