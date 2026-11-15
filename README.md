@@ -1,43 +1,26 @@
 # tiny-chess-01 entry
 
-An original, from-scratch chess engine in under 4 KB of Python 3.13 (standard
-library only), entered in make.fun's `tiny-chess-01` bounty.
+An original chess engine in 4 KB of Python 3.13 (standard library only),
+entered in make.fun's `tiny-chess-01` bounty.
 
-## How it works
+`main.py` is the whole engine: an LZMA-packed payload written by the kit's
+`makefun compress` from the readable source (uploaded with the transcripts).
 
-`main.py` at the repository root is the entry the env runs. It is not written
-by hand at that size: it is an LZMA-compressed, self-extracting payload
-produced by the kit's `makefun compress` from the real source, which this
-repository also documents here (the source itself is not committed, per the
-competition's rules, but is uploaded with the build transcripts).
+## Engine
 
-The engine:
-
-- parses the FEN the env serves each turn into a simple `{(file, rank): piece}`
-  board;
-- generates pseudo-legal moves (pawns incl. en passant/promotion, knights,
-  sliding bishops/rooks/queens, king incl. castling);
-- always submits a move drawn from the env's own `legal_moves` for the
-  current position, so it can never submit an illegal move even though its
-  internal move generator is only pseudo-legal;
-- searches with iterative-deepening negamax, alpha-beta pruning, and a
-  capture/promotion quiescence search with delta pruning at the leaves;
-- caches negamax results in a lightweight transposition table keyed on a
-  deterministic (fixed-seed) Zobrist-style position hash, reused across the
-  iterative-deepening passes of a single move decision;
-- extends the search by one real ply instead of dropping to quiescence when
-  a move delivers check, to avoid horizon-effect blunders right past a
-  forcing sequence;
-- evaluates material plus simple piece-square tables, a king pawn-shield
-  bonus and open-file penalty (king safety), scaled down as material thins
-  towards the endgame (a separate mobility term was tried and dropped: its
-  per-node eval cost pushed worst-case move time too close to the cap);
-- has a very high king value so a pseudo-legal line that exposes the king
-  to capture is refuted by the search itself, without a separate
-  check-detection pass in the hot move-generation loop;
-- is bounded purely by a fixed node-count budget per move (never the wall
-  clock), so it is fully deterministic: the same position and history always
-  produce the same move, which the rules require.
+- 120-square mailbox board kept as a string; the side to move is always
+  "white" (the board is rotated and case-swapped after every move), so one
+  move generator and one evaluation serve both colours
+- incremental material + piece-square evaluation, with a separate king table
+  for the endgame
+- legal search: moves that leave the king attacked are skipped, so mates and
+  stalemates are scored exactly (stalemate = 0)
+- iterative deepening alpha-beta with a transposition table (best move,
+  bounds), null-move pruning, late-move reductions, a killer move per ply,
+  MVV-LVA ordering, check extension and capture/promotion quiescence
+- threefold repetition seen from the game's full move list
+- bounded by a fixed node budget per move, never a clock: the same position
+  and history always give the same move, so a replay matches
 
 ## License
 
@@ -45,5 +28,5 @@ MIT, see `LICENSE`.
 
 ## Ownership
 
-`.makefun/owner.json` names the wallet linked to the submitting make.fun
+`.makefun/owner.json` names a wallet linked to the submitting make.fun
 account, since that account's GitHub login is not the repository owner.
