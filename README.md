@@ -22,6 +22,20 @@ entered in make.fun's `tiny-chess-01` bounty.
 - bounded by a fixed node budget per move, never a clock: the same position
   and history always give the same move, so a replay matches
 
+## Local practice results
+
+Run on the kit's env and scorer, one trial per practice instance (6 games
+each, depth-2 to nodes-500k):
+
+| instance | Elo | W-D-L |
+|---|---|---|
+| trial-0 | 1279 | 3-0-3 |
+| trial-1 | 1364 | 3-1-2 |
+| trial-2 | 1451 | 4-0-2 |
+
+Every move stayed under about 4.3 s on one CPU (40,000-node budget, hard cap
+three times that), well inside the 10 s move limit.
+
 ## License
 
 MIT, see `LICENSE`.
